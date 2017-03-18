@@ -8,7 +8,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -21,15 +21,13 @@
 
 #include <cassert>
 #include <NTL/lzz_pXFactoring.h>
-#include "FHE.h"
 #include "timing.h"
-#include "EncryptedArray.h"
 #include "matrix.h"
 
-template<class type> 
+template<class type>
 class RandomMatrix : public  PlaintextMatrixInterface<type> {
 public:
-  PA_INJECT(type) 
+  PA_INJECT(type)
 
 private:
   const EncryptedArray& ea;
@@ -39,7 +37,7 @@ private:
 public:
   ~RandomMatrix() { /*cout << "destructor: random matrix\n";*/ }
 
-  RandomMatrix(const EncryptedArray& _ea) : ea(_ea) { 
+  RandomMatrix(const EncryptedArray& _ea) : ea(_ea) {
     long n = ea.size();
     long d = ea.getDegree();
 
@@ -90,10 +88,10 @@ buildRandomMatrix(const EncryptedArray& ea)
   }
 }
 
-template<class type> 
+template<class type>
 class RandomBlockMatrix : public  PlaintextBlockMatrixInterface<type> {
 public:
-  PA_INJECT(type) 
+  PA_INJECT(type)
 
 private:
   const EncryptedArray& ea;
@@ -102,7 +100,7 @@ private:
 
 public:
   ~RandomBlockMatrix() { /*cout << "destructor: random block matrix\n";*/ }
-  RandomBlockMatrix(const EncryptedArray& _ea) : ea(_ea) { 
+  RandomBlockMatrix(const EncryptedArray& _ea) : ea(_ea) {
     long n = ea.size();
     long d = ea.getDegree();
 
@@ -119,8 +117,8 @@ public:
         bool zEntry = (RandomBnd(bnd) > 0);
 
         for (long u = 0; u < d; u++)
-          for (long v = 0; v < d; v++) 
-            if (zEntry) 
+          for (long v = 0; v < d; v++)
+            if (zEntry)
               clear(data[i][j][u][v]);
             else
               random(data[i][j][u][v]);
@@ -181,7 +179,7 @@ void  TestIt(long m, long p, long r, long d, long L)
   if (d == 0)
     G = context.alMod.getFactorsOverZZ()[0];
   else
-    G = makeIrredPoly(p, d); 
+    G = makeIrredPoly(p, d);
 
   cout << "G = " << G << "\n";
   cout << "generating key-switching matrices... ";
@@ -209,7 +207,7 @@ void  TestIt(long m, long p, long r, long d, long L)
 
     cout << " Multiplying with PlaintextMatrixBaseInterface... " << std::flush;
     mat_mul(ea, v, *ptr);         // multiply the plaintext vector
-    mat_mul(ea, ctxt2, *ptr);  // multiply the ciphertext vector
+    mat_mul_dense(ea, ctxt2, *ptr);  // multiply the ciphertext vector
 
     NewPlaintextArray v1(ea);
     ea.decrypt(ctxt2, secretKey, v1); // decrypt the ciphertext vector
@@ -262,14 +260,14 @@ void  TestIt(long m, long p, long r, long d, long L)
     Ctxt ctxt2 = ctxt;
 
     mat_mul(ea, v, *ptr);         // multiply the plaintext vector
-    cout << " Multiplying with PlaintextBlockMatrixBaseInterface... " 
+    cout << " Multiplying with PlaintextBlockMatrixBaseInterface... "
 	 << std::flush;
     mat_mul(ea, ctxt2, *ptr);  // multiply the ciphertext vector
 
     NewPlaintextArray v1(ea);
     ea.decrypt(ctxt2, secretKey, v1); // decrypt the ciphertext vector
 
-    if (equals(ea, v, v1))        // check that we've got the right answer
+    if (equals(ea, v, v1)) // check that we've got the right answer
       cout << "Nice!!\n";
     else
       cout << "Grrr...\n";
@@ -303,7 +301,7 @@ void  TestIt(long m, long p, long r, long d, long L)
 }
 
 
-void usage(char *prog) 
+void usage(char *prog)
 {
   cout << "Usage: "<<prog<<" [ optional parameters ]...\n";
   cout << "  optional parameters have the form 'attr1=val1 attr2=val2 ...'\n";
@@ -320,7 +318,7 @@ void usage(char *prog)
 /* Testing the functionality of multiplying an encrypted vector by a plaintext
  * matrix, either over the extension- or the base-field/ring.
  */
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
   argmap_t argmap;
   argmap["m"] = "2047";
@@ -351,10 +349,10 @@ int main(int argc, char *argv[])
 /************               UNUSED CODE                   ***********/
 /********************************************************************/
 #if 0
-template<class type> 
+template<class type>
 class RunningSumMatrix : public  PlaintextMatrixInterface<type> {
 public:
-  PA_INJECT(type) 
+  PA_INJECT(type)
 
 private:
   const EncryptedArray& ea;
@@ -397,10 +395,10 @@ buildRunningSumMatrix(const EncryptedArray& ea)
 }
 
 
-template<class type> 
+template<class type>
 class TotalSumMatrix : public  PlaintextMatrixInterface<type> {
 public:
-  PA_INJECT(type) 
+  PA_INJECT(type)
 
 private:
   const EncryptedArray& ea;
@@ -439,10 +437,10 @@ buildTotalSumMatrix(const EncryptedArray& ea)
   }
 }
 
-template<class type> 
+template<class type>
 class PolyBlockMatrix : public  PlaintextBlockMatrixInterface<type> {
 public:
-  PA_INJECT(type) 
+  PA_INJECT(type)
 
 private:
   const EncryptedArray& ea;

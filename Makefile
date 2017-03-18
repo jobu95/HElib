@@ -8,17 +8,14 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-# 
+
 CC = g++
-#
-#CFLAGS = -g -O2 -Wfatal-errors -Wshadow -Wall -I/usr/local/include 
+
 CFLAGS = -g -O2 -std=c++11 -pthread -DFHE_THREADS -DFHE_DCRT_THREADS -DFHE_BOOT_THREADS
-#CFLAGS = -g -O2 -std=c++11 -pthread
-#CFLAGS = -g -O2 -std=c++11 
 
 # useful flags:
 #   -std=c++11
@@ -47,58 +44,63 @@ CFLAGS = -g -O2 -std=c++11 -pthread -DFHE_THREADS -DFHE_DCRT_THREADS -DFHE_BOOT_
 
 $(info HElib requires NTL version 9.4.0 or higher, see http://shoup.net/ntl)
 $(info If you get compilation errors, try to add/remove -std=c++11 in Makefile)
-$(info )
+$(info)
 
 LD = g++
 AR = ar
 ARFLAGS=rv
-GMP=-lgmp 
+GMP=-lgmp
 LDLIBS = -L/usr/local/lib -lntl $(GMP) -lm
 
-HEADER = EncryptedArray.h FHE.h Ctxt.h CModulus.h FHEContext.h PAlgebra.h DoubleCRT.h NumbTh.h bluestein.h IndexSet.h timing.h IndexMap.h replicate.h hypercube.h matching.h powerful.h permutations.h polyEval.h multicore.h matrix.h
+TMP=$(wildcard src/*.cpp)
+SRC=$(filter-out src/Test_%.cpp, $(TMP))
 
-SRC = KeySwitching.cpp EncryptedArray.cpp FHE.cpp Ctxt.cpp CModulus.cpp FHEContext.cpp PAlgebra.cpp DoubleCRT.cpp NumbTh.cpp bluestein.cpp IndexSet.cpp timing.cpp replicate.cpp hypercube.cpp matching.cpp powerful.cpp BenesNetwork.cpp permutations.cpp PermNetwork.cpp OptimizePermutations.cpp eqtesting.cpp polyEval.cpp extractDigits.cpp EvalMap.cpp OldEvalMap.cpp recryption.cpp debugging.cpp matrix.cpp
+TMP=$(wildcard src/*.cpp)
+TST_SRC=$(filter src/Test_%.cpp, $(TMP))
 
-OBJ = NumbTh.o timing.o bluestein.o PAlgebra.o  CModulus.o FHEContext.o IndexSet.o DoubleCRT.o FHE.o KeySwitching.o Ctxt.o EncryptedArray.o replicate.o hypercube.o matching.o powerful.o BenesNetwork.o permutations.o PermNetwork.o OptimizePermutations.o eqtesting.o polyEval.o extractDigits.o EvalMap.o OldEvalMap.o recryption.o debugging.o matrix.o
+# build/*.o
+OBJ=$(patsubst src/%.cpp, build/%.o, $(SRC))
 
-TESTPROGS = Test_General_x Test_PAlgebra_x Test_IO_x Test_Replicate_x Test_LinPoly_x Test_matmul_x Test_Powerful_x Test_Permutations_x Test_Timing_x Test_PolyEval_x Test_extractDigits_x Test_EvalMap_x Test_bootstrapping_x
+TST_OBJ=$(patsubst src/%.cpp, build/%.o, $(TST_SRC))
 
+TST_PROGS=$(patsubst src/%.cpp, bin/%_x, $(TST_SRC))
 
-all: fhe.a
+.PHONY: all
+all: build/fhe.a
 
-check: Test_General_x Test_LinPoly_x Test_Permutations_x Test_PolyEval_x Test_Replicate_x Test_EvalMap_x Test_extractDigits_x Test_bootstrapping_x
-	./Test_General_x R=1 k=10 p=2 r=2
-	./Test_General_x R=1 k=10 p=2 d=2
-	./Test_General_x R=2 k=10 p=7 r=2
-	./Test_LinPoly_x
-	./Test_Permutations_x
-	./Test_PolyEval_x p=7 r=2 d=34
-	./Test_Replicate_x m=1247
-	./Test_EvalMap_x mvec="[7 3 221]" gens="[3979 3095 3760]" ords="[6 2 -8]"
-	./Test_extractDigits_x m=2047 p=5
-	./Test_bootstrapping_x
-	./Test_bootstrapping_x p=7
+.PHONY: check
+check: test
+	@./bin/launch_tests.sh
 
-test: $(TESTPROGS)
+.PHONY: test
+test: $(TST_PROGS)
 
+.PHONY: obj
 obj: $(OBJ)
 
-DoubleCRT.o: DoubleCRT.cpp AltCRT.cpp $(HEADER)
-	$(CC) $(CFLAGS) -c DoubleCRT.cpp
+build/DoubleCRT.o: src/DoubleCRT.cpp src/AltCRT.cpp src/DoubleCRT.h \
+		src/AltCRT.h
+	$(CC) $(CFLAGS) -c src/DoubleCRT.cpp -o $@
 
-%.o: %.cpp $(HEADER)
-	$(CC) $(CFLAGS) -c $<
+build/%.o: src/%.cpp src/%.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
-fhe.a: $(OBJ)
-	$(AR) $(ARFLAGS) fhe.a $(OBJ)
+# Fallthrough target for CPP files with no corresponding header
+build/%.o: src/%.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
 
-./%_x: %.cpp fhe.a
-	$(CC) $(CFLAGS) -o $@ $< fhe.a $(LDLIBS)
+build/fhe.a: $(OBJ)
+	$(AR) $(ARFLAGS) $@ $^
 
+bin/%_x: src/%.cpp build/fhe.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
+
+.PHONY: clean
 clean:
-	rm -f *.o *_x *_x.exe *.a core.*
-	rm -rf *.dSYM
+	rm -f build/*.o bin/*_x bin/*_x.exe build/*.a core.*
+	rm -rf bin/*.dSYM
 
+.PHONY: info
 info:
 	: HElib require NTL version 9.4.0 or higher
 	: Compilation flags are 'CFLAGS=$(CFLAGS)'

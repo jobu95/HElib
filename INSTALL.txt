@@ -41,7 +41,7 @@ consider adjusting some of the defaults for CC and CFLAGS. The
 defaults should be OK on most systems, but you can see the suggested
 options, which are documented in the Makefile.
 
-On the command line in the HElib src directory:
+On the command line in the top level of the HElib repository:
 
    make
 
