@@ -1,0 +1,12 @@
+# ignore vim swap files
+*.swp
+*.swo
+
+# ignore ctags files
+tags
+
+# ignore build artifacts
+build/*
+
+# ignore contents of bin except for shell scripts
+!bin/*.sh
